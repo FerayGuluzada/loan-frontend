@@ -19,11 +19,17 @@ export default function LoanForm() {
       return;
     }
 
+    if (!loanAmount || !loanPeriod) {
+      setError("Loan amount and period are required.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const body = {
         personalCode,
-        loanAmount: loanAmount === "" ? undefined : Number(loanAmount),
-        loanPeriodMonths: loanPeriod === "" ? undefined : Number(loanPeriod),
+        loanAmount: Number(loanAmount),
+        loanPeriodMonths: Number(loanPeriod),
       };
 
       const res = await fetch("http://localhost:8080/loan/decision", {
@@ -99,33 +105,52 @@ export default function LoanForm() {
             value={personalCode}
             onChange={(e) => setPersonalCode(e.target.value)}
             style={inputStyle}
-            required
+            required // Prevent empty submission
           />
         </div>
+
         <div>
           <label style={labelStyle}>Loan Amount (€):</label>
           <input
             type="number"
-            min={2000}
-            max={10000}
-            step={100}
+            min={2000}          // Minimum allowed value
+            max={10000}         // Maximum allowed value
+            step={100}          // Arrow keys increase/decrease by €100
             value={loanAmount}
-            onChange={(e) => setLoanAmount(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setLoanAmount("2000"); // Reset to min if cleared
+              } else {
+                setLoanAmount(value);
+              }
+            }}
             style={inputStyle}
+            required // Prevent empty submission
           />
         </div>
+
         <div>
           <label style={labelStyle}>Loan Period (months):</label>
           <input
             type="number"
-            min={12}
-            max={60}
-            step={1}
+            min={12}            // Minimum allowed period
+            max={60}            // Maximum allowed period
+            step={1}            // Arrow keys increase/decrease by 1 month
             value={loanPeriod}
-            onChange={(e) => setLoanPeriod(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === "") {
+                setLoanPeriod("12"); // Reset to min if cleared
+              } else {
+                setLoanPeriod(value);
+              }
+            }}
             style={inputStyle}
+            required // Prevent empty submission
           />
         </div>
+
         <button type="submit" disabled={loading} style={buttonStyle}>
           {loading ? "Checking..." : "Get Decision"}
         </button>
@@ -136,7 +161,7 @@ export default function LoanForm() {
       {response && (
         <div style={responseStyle}>
           <h3>Decision:</h3>
-          <p>Approved: {response.approved ? "Yes ✅ " : "No ❌"}</p>
+          <p>Approved: {response.approved ? "Yes ✅" : "No ❌"}</p>
           <p>Approved Amount: €{response.approvedAmount}</p>
           <p>Approved Period: {response.approvedPeriodMonths} months</p>
         </div>
