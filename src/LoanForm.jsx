@@ -2,8 +2,8 @@ import { useState } from "react";
 
 export default function LoanForm() {
   const [personalCode, setPersonalCode] = useState("");
-  const [loanAmount, setLoanAmount] = useState(2000);
-  const [loanPeriod, setLoanPeriod] = useState(12);
+  const [loanAmount, setLoanAmount] = useState("2000"); 
+  const [loanPeriod, setLoanPeriod] = useState("12"); 
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,19 +20,19 @@ export default function LoanForm() {
     }
 
     try {
+      const body = {
+        personalCode,
+        loanAmount: loanAmount === "" ? undefined : Number(loanAmount),
+        loanPeriodMonths: loanPeriod === "" ? undefined : Number(loanPeriod),
+      };
+
       const res = await fetch("http://localhost:8080/loan/decision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          personalCode,
-          loanAmount: Number(loanAmount),
-          loanPeriodMonths: Number(loanPeriod),
-        }),
+        body: JSON.stringify(body),
       });
 
-      if (!res.ok) {
-        throw new Error("Server error");
-      }
+      if (!res.ok) throw new Error("Server error");
 
       const data = await res.json();
       setResponse(data);
@@ -43,50 +43,100 @@ export default function LoanForm() {
     }
   };
 
+  const containerStyle = {
+    maxWidth: 360,
+    margin: "50px auto",
+    padding: "25px",
+    fontFamily: "Arial, sans-serif",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    backgroundColor: "#fafafa",
+    color: "#333",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  };
+
+  const headingStyle = { textAlign: "center", marginBottom: 25, color: "#222" };
+  const inputStyle = {
+    width: "100%",
+    padding: "10px",
+    margin: "8px 0 16px 0",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+    fontSize: "16px",
+    backgroundColor: "#fff",
+    color: "#000",
+    boxSizing: "border-box",
+  };
+  const labelStyle = { fontWeight: "600", fontSize: "14px" };
+  const buttonStyle = {
+    width: "100%",
+    padding: "10px",
+    fontSize: "16px",
+    backgroundColor: "#4CAF50",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+  };
+  const errorStyle = { color: "red", marginTop: 10, fontSize: "14px" };
+  const responseStyle = {
+    marginTop: 20,
+    padding: 15,
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    backgroundColor: "#e6f7ff",
+    color: "#000",
+  };
+
   return (
-    <div style={{ maxWidth: 400, margin: "20px auto", fontFamily: "sans-serif" }}>
-      <h2>Loan Decision Engine</h2>
+    <div style={containerStyle}>
+      <h2 style={headingStyle}>Loan Decision Engine</h2>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Personal Code:</label><br />
+          <label style={labelStyle}>Personal Code:</label>
           <input
             type="text"
             value={personalCode}
             onChange={(e) => setPersonalCode(e.target.value)}
+            style={inputStyle}
             required
           />
         </div>
         <div>
-          <label>Loan Amount (€):</label><br />
+          <label style={labelStyle}>Loan Amount (€):</label>
           <input
             type="number"
-            min="2000"
-            max="10000"
+            min={2000}
+            max={10000}
+            step={100}
             value={loanAmount}
             onChange={(e) => setLoanAmount(e.target.value)}
+            style={inputStyle}
           />
         </div>
         <div>
-          <label>Loan Period (months):</label><br />
+          <label style={labelStyle}>Loan Period (months):</label>
           <input
             type="number"
-            min="12"
-            max="60"
+            min={12}
+            max={60}
+            step={1}
             value={loanPeriod}
             onChange={(e) => setLoanPeriod(e.target.value)}
+            style={inputStyle}
           />
         </div>
-        <button type="submit" disabled={loading} style={{ marginTop: 10 }}>
+        <button type="submit" disabled={loading} style={buttonStyle}>
           {loading ? "Checking..." : "Get Decision"}
         </button>
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p style={errorStyle}>{error}</p>}
 
       {response && (
-        <div style={{ marginTop: 20 }}>
+        <div style={responseStyle}>
           <h3>Decision:</h3>
-          <p>Approved: {response.approved ? "Yes" : "No"}</p>
+          <p>Approved: {response.approved ? "Yes ✅ " : "No ❌"}</p>
           <p>Approved Amount: €{response.approvedAmount}</p>
           <p>Approved Period: {response.approvedPeriodMonths} months</p>
         </div>
